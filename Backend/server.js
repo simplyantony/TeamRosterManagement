@@ -13,7 +13,16 @@ const homeRoutes = require('./routes/homeRoutes');
 
 const app = express();
 
-app.use(cors({origin: 'http://localhost:3000', credentials: true}));
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()): ['http://localhost:3000'];
+
+app.use(cors({
+    origin: (origin, callback) => {
+        if(!origin || allowedOrigins.includes(origin)) return callback(null, true);
+        callback(new Error(`CORS blocked for origins: ${origin}`));
+    },
+    credentials: true,
+}));
 app.use(express.json());
 
 app.use('/api/auth' , authRoutes);
@@ -32,7 +41,7 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-mongosse
+mongoose
 .connect(process.env.MONGO_URI)
 .then(() => {
     console.log('MongoDB connected');
